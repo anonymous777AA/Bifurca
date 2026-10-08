@@ -1,0 +1,820 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Bifurca</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Faster+One&family=Russo+One&family=Rubik:wght@400;500;700;800&display=swap">
+<style>
+  /* Bifurca: one ride, two roads. Night street, teal vs orange. Single dark theme on purpose. */
+  :root {
+    color-scheme: dark;
+    --bg: #100c18;
+    --panel: #1a1424;
+    --panel-2: #241c31;
+    --line: #362a47;
+    --ink: #f6f0e9;
+    --muted: #a99bb8;
+    --accent: #ffc93c;
+    --accent-dark: #b8860b;
+    --accent-ink: #261800;
+    --smooth: #2fd3c2;
+    --smooth-dark: #12786d;
+    --wild: #ff6a2b;
+    --wild-dark: #9c3510;
+    --low: #ff5a5f;
+    --mid: #7cc1ff;
+    --high: #4ade80;
+    --high-dark: #1f8a47;
+    --logo: "Faster One", "Russo One", Impact, sans-serif;
+    --display: "Russo One", "Arial Black", Impact, sans-serif;
+    --body: "Rubik", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--body); padding-inline: 16px; padding-block: 14px 28px; }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 12px; }
+  button, select, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Logo */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo svg { width: 46px; height: 46px; flex: none; }
+  .word { display: grid; line-height: 1; }
+  .word b { font: 40px/0.95 var(--logo); font-weight: 400; letter-spacing: 0.01em; }
+  .word b .s { color: var(--smooth); } .word b .w { color: var(--wild); }
+  .word small { font: 11px/1 var(--display); letter-spacing: 0.32em; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+  .free { font-size: 11.5px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: 4px 8px; border-radius: 6px; }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chip { font-size: 13px; font-weight: 500; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+  .chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .balance { display: flex; align-items: baseline; gap: 6px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px 12px; }
+  .balance b { font: 19px/1 var(--display); color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+  .history { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .history::-webkit-scrollbar { display: none; }
+  .pill { flex: none; font: 12.5px/1 var(--display); font-variant-numeric: tabular-nums; padding: 6px 9px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); white-space: nowrap; }
+  .pill .low { color: var(--low); } .pill .mid { color: var(--mid); } .pill .high { color: var(--high); }
+  .pill .ts { color: var(--smooth); } .pill .tw { color: var(--wild); } .pill .x { color: var(--low); }
+
+  .main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; align-items: start; }
+  @media (max-width: 920px) { .main { grid-template-columns: minmax(0, 1fr); } }
+  .stage { display: grid; gap: 12px; min-width: 0; }
+
+  .scene { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9.4; border-radius: 18px; overflow: hidden; border: 1px solid var(--line);
+    background: linear-gradient(180deg, #150f2c 0%, #3a1f4c 40%, #8c3f45 63%, #d97a46 100%); }
+  @media (max-width: 560px) { .scene { aspect-ratio: 4 / 4.1; } }
+  .scene.lowgfx { background: var(--panel); }
+  canvas { display: block; width: 100%; height: 100%; }
+  .ov { position: absolute; pointer-events: none; }
+  .ov-c { inset: 0; display: grid; place-content: start center; padding-top: 6%; text-align: center; }
+  .mult { font: clamp(38px, 8.5vw, 84px)/1 var(--display); font-variant-numeric: tabular-nums; text-shadow: 0 4px 22px rgba(0,0,0,0.55); }
+  .mult.low { color: var(--low); } .mult.mid { color: var(--ink); } .mult.high { color: var(--high); } .mult.down { color: var(--low); }
+  .sub { margin-top: 6px; font: 13px/1.3 var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: rgba(246,240,233,0.9); min-height: 17px; }
+  .bar { width: min(220px, 55%); height: 4px; margin: 10px auto 0; border-radius: 4px; background: rgba(255,255,255,0.18); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); transform-origin: left; }
+  .fork-call { margin: 12px auto 0; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .fork-call span { font: 13px/1 var(--display); padding: 9px 12px; border-radius: 10px; background: rgba(16,12,24,0.85); }
+  .fork-call .s { color: var(--smooth); border: 1px solid var(--smooth); }
+  .fork-call .w { color: var(--wild); border: 1px solid var(--wild); }
+  .caption { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; gap: 10px; align-items: center; background: rgba(16,12,24,0.86); border-radius: 12px; padding: 8px 12px; pointer-events: none; min-height: 40px; }
+  .live { flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; color: #fff; background: var(--low); border-radius: 4px; padding: 2px 6px; }
+  #caption { font-weight: 500; font-size: 14.5px; }
+
+  /* Bet panels */
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .panels { grid-template-columns: 1fr; } }
+  .bp { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .bp-head { display: flex; justify-content: space-between; align-items: center; }
+  .bp-head .tag { font: 13px/1 var(--display); letter-spacing: 0.08em; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; }
+  .bp-head .state { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .amt { display: grid; grid-template-columns: 46px 1fr 46px; gap: 6px; }
+  .amt input { min-width: 0; width: 100%; text-align: center; font: 22px/1 var(--display); font-variant-numeric: tabular-nums; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 6px; }
+  .sq { background: var(--panel-2); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 12px; font: 16px/1 var(--display); cursor: pointer; }
+  .sq:active { transform: translateY(1px); border-bottom-width: 2px; }
+  .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .quick button { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 0; font: 13px/1 var(--display); color: var(--muted); cursor: pointer; }
+  .quick button:hover, .sq:hover { border-color: var(--accent); color: var(--ink); }
+
+  /* Road signs */
+  .road { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sign { position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: center; text-align: left; padding: 8px 10px; border-radius: 12px; cursor: pointer; background: var(--panel-2); border: 2px solid var(--line); }
+  .sign svg { width: 30px; height: 30px; }
+  .sign b { display: block; font: 14px/1.1 var(--display); letter-spacing: 0.04em; }
+  .sign small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .sign.s b { color: var(--smooth); } .sign.w b { color: var(--wild); }
+  .sign.s[aria-pressed="true"] { background: var(--smooth); border-color: var(--smooth); }
+  .sign.w[aria-pressed="true"] { background: var(--wild); border-color: var(--wild); }
+  .sign[aria-pressed="true"] b, .sign[aria-pressed="true"] small { color: #10141a; }
+  .sign[aria-pressed="true"] svg * { stroke: #10141a; }
+  .sign:disabled { cursor: default; opacity: 0.6; }
+  .road.flash .sign { animation: flash 0.7s ease-in-out infinite alternate; }
+  @keyframes flash { from { box-shadow: 0 0 0 0 rgba(255,201,60,0); } to { box-shadow: 0 0 0 4px rgba(255,201,60,0.5); } }
+  @media (prefers-reduced-motion: reduce) { .road.flash .sign { animation: none; outline: 2px solid var(--accent); } }
+
+  .auto { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .auto input[type="number"] { width: 78px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* The big button: chunky, pressable */
+  .go { border: 0; border-radius: 16px; padding: 12px; min-height: 70px; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink); box-shadow: inset 0 -6px 0 var(--accent-dark);
+    font: 22px/1.05 var(--display); letter-spacing: 0.03em; transition: transform 0.05s; }
+  .go:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -3px 0 var(--accent-dark); }
+  .go small { display: block; font: 600 12.5px/1.3 var(--body); opacity: 0.85; margin-top: 4px; letter-spacing: 0; }
+  .go.cashout { background: var(--high); color: #062b14; box-shadow: inset 0 -6px 0 var(--high-dark); }
+  .go.cancel { background: var(--panel-2); color: var(--ink); box-shadow: inset 0 -6px 0 #120d1a; border: 1px solid var(--line); }
+  .go:disabled { opacity: 0.55; cursor: not-allowed; }
+  .res { font-size: 13px; font-weight: 700; min-height: 18px; }
+  .res.win { color: var(--high); } .res.lose { color: var(--low); }
+
+  /* Riders */
+  .riders { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 12px; display: grid; gap: 8px; min-width: 0; }
+  .riders-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .riders-head b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .split-count { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12.5px; }
+  .split-count div { border-radius: 8px; padding: 6px 8px; background: var(--panel-2); }
+  .split-count b { font-family: var(--display); font-variant-numeric: tabular-nums; }
+  .split-count .s b { color: var(--smooth); } .split-count .w b { color: var(--wild); }
+  .cols, .row { display: grid; grid-template-columns: 1.5fr 0.8fr 0.5fr 0.8fr 0.9fr; gap: 6px; align-items: center; }
+  .cols { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 8px; }
+  .cols span:not(:first-child), .row span:not(:first-child) { text-align: right; }
+  .list { display: grid; gap: 3px; max-height: 430px; overflow-y: auto; }
+  @media (max-width: 920px) { .list { max-height: 300px; } }
+  .row { font-size: 13px; font-variant-numeric: tabular-nums; background: var(--panel-2); border-radius: 8px; padding: 5px 8px; border: 1px solid transparent; }
+  .row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .rd { font-weight: 800; } .rd.s { color: var(--smooth); } .rd.w { color: var(--wild); }
+  .row.out { background: rgba(74,222,128,0.13); border-color: rgba(74,222,128,0.35); }
+  .row.out .x, .row.out .win { color: var(--high); font-weight: 700; }
+  .row.you .name { color: var(--accent); font-weight: 700; }
+  details { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+  summary { cursor: pointer; color: var(--ink); font-weight: 500; }
+  details p { margin: 6px 0 0; }
+
+  .info { display: grid; gap: 6px; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+  .info b { color: var(--ink); }
+  .net.up { color: var(--high); } .net.down { color: var(--low); }
+  .linkish { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
+  .reality { position: fixed; inset: 0; background: rgba(10,6,14,0.72); display: grid; place-items: center; padding: 16px; z-index: 10; }
+  .reality-card { max-width: 420px; background: var(--panel); border: 1px solid var(--accent); border-radius: 16px; padding: 20px; display: grid; gap: 10px; }
+  .reality-card h2 { margin: 0; font: 20px/1.2 var(--display); color: var(--accent); }
+  .reality-card p { margin: 0; }
+  .reality-card button { justify-self: start; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-label="Bifurca">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M24 46 V27" stroke="#f6f0e9" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <path d="M24 28 C24 18, 14 16, 8 5" stroke="#2fd3c2" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <path d="M24 28 C24 18, 34 16, 40 5" stroke="#ff6a2b" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <path d="M24 44 V31" stroke="#100c18" stroke-width="1.6" stroke-dasharray="3 3" fill="none"/>
+          <circle cx="24" cy="28" r="3.4" fill="#ffc93c"/>
+        </svg>
+        <div class="word"><b><span class="s">BIFUR</span><span class="w">CA</span></b><small>One ride · two roads</small></div>
+      </div>
+      <span class="free">Free play · no real money</span>
+    </div>
+    <div class="tools">
+      <span class="balance">Balance <b id="balance">1,000.00</b></span>
+      <select class="chip" id="lang" aria-label="Commentary language">
+        <option value="en">English</option>
+        <option value="pt">Português (BR)</option>
+        <option value="es">Español</option>
+      </select>
+      <button class="chip" id="soundBtn" type="button" aria-pressed="true">Sound: on</button>
+      <button class="chip" id="lowBtn" type="button" aria-pressed="false">Low graphics: off</button>
+    </div>
+  </header>
+
+  <div class="history" id="history" aria-label="Last rides, newest first"></div>
+
+  <div class="main">
+    <section class="stage">
+      <div class="scene" id="scene">
+        <canvas id="cv"></canvas>
+        <div class="ov ov-c">
+          <div class="mult mid" id="mult">1.00x</div>
+          <div class="sub" id="sub">Starts in 6</div>
+          <div class="bar" id="bar"><i id="barFill"></i></div>
+          <div class="fork-call" id="forkCall" hidden><span class="s">Smooth · keeps climbing</span><span class="w">Wild · 1 in 3 to triple</span></div>
+        </div>
+        <div class="caption"><span class="live">LIVE</span><span id="caption" aria-live="polite">Riders lining up. Bets are open!</span></div>
+      </div>
+      <div class="panels" id="panels"></div>
+    </section>
+
+    <aside class="riders" aria-label="Riders this round">
+      <div class="riders-head"><span>Riders <b id="riderCount">0</b></span><span>Total bets <b id="totalBets">0</b></span></div>
+      <div class="split-count"><div class="s">Smooth road <b id="cntS">0</b></div><div class="w">Wild road <b id="cntW">0</b></div></div>
+      <div class="cols"><span>Rider</span><span>Bet</span><span>Road</span><span>Out at</span><span>Won</span></div>
+      <div class="list" id="list"></div>
+      <details open>
+        <summary>How Bifurca works</summary>
+        <p>The ride climbs toward the split at 3.00x. About 1 ride in 3 gets there; the rest go down on the way.</p>
+        <p>At the split you get 4 seconds: take 3.00x, or pick a road.</p>
+        <p><b style="color:var(--smooth)">Smooth road:</b> keeps climbing like a normal ride until it goes down.</p>
+        <p><b style="color:var(--wild)">Wild road:</b> big ramp jumps. Each jump has a 1 in 3 chance to land. Land it and your multiplier triples (9x, 27x, 81x…). Miss and it's over. Cash out between jumps.</p>
+      </details>
+    </aside>
+  </div>
+
+  <div class="info">
+    <div><b>Odds in plain words:</b> every choice pays back 97 of every 100 credits bet on average. About 1 ride in 3 reaches the split. A Wild jump lands 1 time in 3.</div>
+    <div id="session">Session 0:00 · Rides 0 · Your result <span class="net">0.00</span></div>
+    <div>Demo for testing the game idea only. Fake credits, no deposits, no prizes. <button class="linkish" id="reset" type="button">Reset credits to 1,000</button></div>
+  </div>
+</div>
+
+<div class="reality" id="reality" hidden>
+  <div class="reality-card" role="dialog" aria-labelledby="realityTitle">
+    <h2 id="realityTitle">Time check</h2>
+    <p id="realityText"></p>
+    <button id="realityOk" type="button">Got it</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   BIFURCA: free-play crash prototype ("bifurca" = "it splits")
+   The twist: at 3.00x the road splits. Mid-ride, choose SMOOTH (normal climb)
+   or WILD (1-in-3 triple-or-nothing ramp jumps). Every choice keeps 97% RTP.
+   Math (checked with 6 million simulated rides):
+     ride to the split: C1 = 0.97 / U     -> reaches 3.00x 32.3% of the time
+     smooth road:       S  = 3 / U2       -> fair from the split on (0.323 × 3/y = 0.97/y)
+     wild road:         each jump 1 in 3, x3 -> fair from the split on
+   ========================================================= */
+
+// ---------- 1. Settings ----------
+const CFG = {
+  EDGE_RTP: 0.97, FORK: 3, MAX: 10000,
+  JUMP_ODDS: 1 / 3, JUMP_MULT: 3, MAX_JUMPS: 6,     // 3 × 3^6 = 2,187x cap on the Wild road
+  WAIT: 6, FORK_PAUSE: 4, RESULT: 4.5, GROWTH: 0.12,
+  JUMP_EVERY: 2.0, AIR: 0.8, REALITY_MIN: 10
+};
+
+// ---------- 2. Commentary ----------
+const LINES = {
+  en: { open: "Riders lining up. Bets are open!", go: "And they're off!", soon: "The split is coming up at 3x!",
+    early: "Down before the split at {x}!", fork: "The road splits! Smooth or wild? Four seconds!",
+    split: "Two roads, two rides. Here we go!", land: "Wild road lands jump {n}! Triple! {x}!", fail: "Wild road misses jump {n}! Down at the ramp!",
+    sdown: "Smooth road goes down at {x}!", cap: "Every jump landed! Wild riders cash out at the max!", big: "{name} cashes out at {x}!",
+    both: "Both roads are done. Next ride soon!" },
+  pt: { open: "Pilotos alinhados. Apostas abertas!", go: "Lá vão eles!", soon: "A bifurcação vem aí em 3x!",
+    early: "Caiu antes da bifurcação em {x}!", fork: "A estrada se divide! Tranquila ou selvagem? Quatro segundos!",
+    split: "Duas estradas, duas corridas. Vamos!", land: "Estrada selvagem acerta o salto {n}! Triplica! {x}!", fail: "Estrada selvagem erra o salto {n}! Caiu na rampa!",
+    sdown: "Estrada tranquila cai em {x}!", cap: "Todos os saltos certos! Pilotos selvagens sacam no máximo!", big: "{name} saca em {x}!",
+    both: "As duas estradas acabaram. Próxima corrida já!" },
+  es: { open: "Pilotos en la línea. ¡Apuestas abiertas!", go: "¡Arrancan!", soon: "¡La bifurcación llega en 3x!",
+    early: "¡Se cae antes de la bifurcación en {x}!", fork: "¡El camino se divide! ¿Tranquilo o salvaje? ¡Cuatro segundos!",
+    split: "Dos caminos, dos carreras. ¡Vamos!", land: "¡Camino salvaje aterriza el salto {n}! ¡Triple! ¡{x}!", fail: "¡Camino salvaje falla el salto {n}! ¡Se cae en la rampa!",
+    sdown: "¡Camino tranquilo se cae en {x}!", cap: "¡Todos los saltos aterrizados! ¡Los salvajes cobran el máximo!", big: "¡{name} cobra en {x}!",
+    both: "Los dos caminos terminaron. ¡Ya viene la próxima!" }
+};
+const NAMES = ["Wanjiru","Otieno","Achieng","Kamau","Njeri","Baraka","Zawadi","Chidi","Amaka","Tunde","Kofi","Ama","Kwame","Thandi","Sipho",
+  "Thiago","Gabriel","Larissa","Rafael","Beatriz","Lucas","Mateus","Juliana","Camila","Diego","Lupita","Santiago","Valentina","Mateo","Ximena",
+  "Arjun","Priya","Rohan","Ananya","Vikram","Sneha","Rahul","Aditi","Karan","Meera","Emeka","Ngozi","Yaw","Esi","Juma","Neema","Pedro","Bruna","Caio","Fernanda"];
+const INITIALS = "ABCDEFGHJKLMNOPRSTVW";
+
+// ---------- 3. Game memory ----------
+let balance = 1000, rides = 0, history = [], sessionNet = 0;
+let sessionStart = performance.now(), lastReality = performance.now();
+let phase = "waiting", phaseStart = performance.now();          // waiting -> ride -> (fork -> split) -> result
+let C1 = 1, S = 3, J = 0, m = 1;                                 // this ride's hidden outcomes
+let smoothVal = 3, smoothDown = false, wildVal = 3, wildDown = false, wildDone = false, wildAir = false, wildJumpNo = 0, lastLanded = 0;
+let bots = [], riders = [], said = new Set(), lang = "en", lowGfx = false, lastJumpSound = 0, lastTick = 0;
+let listDirty = true, lastList = 0, lastSay = 0;
+
+const $ = id => document.getElementById(id);
+const r2 = x => Math.round(x * 100) / 100;
+const fmt = n => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const colourOf = x => (x < 2 ? "low" : x < 10 ? "mid" : "high");
+const xs = x => (x >= 100 ? Math.round(x).toLocaleString("en-US") : x.toFixed(2)) + "x";
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ---------- 4. Hidden outcomes for one ride ----------
+function rollRide() {
+  const u1 = 1 - Math.random(), u2 = 1 - Math.random();
+  C1 = Math.max(1, Math.floor(100 * CFG.EDGE_RTP / u1) / 100);
+  S = Math.min(CFG.MAX, Math.max(CFG.FORK, Math.floor(100 * CFG.FORK / u2) / 100));
+  J = 0; while (J < CFG.MAX_JUMPS && Math.random() < CFG.JUMP_ODDS) J++;
+}
+const wildAt = k => CFG.FORK * Math.pow(CFG.JUMP_MULT, k);
+
+// ---------- 5. Commentator ----------
+function say(key, vars = {}, priority = false) {
+  const now = performance.now();
+  if (!priority && now - lastSay < 1200) return;
+  lastSay = now;
+  $("caption").textContent = (LINES[lang][key] || LINES.en[key]).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
+}
+
+// ---------- 6. Sound (made in code; starts after your first tap) ----------
+let soundOn = true, AC = null, engOsc = null, engGain = null, master = null;
+function initAudio() {
+  if (AC) { AC.resume?.(); return; }
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  AC = new Ctx(); master = AC.createGain(); master.gain.value = 0.6; master.connect(AC.destination);
+  engOsc = AC.createOscillator(); engOsc.type = "sawtooth";
+  const f = AC.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 650;
+  engGain = AC.createGain(); engGain.gain.value = 0;
+  engOsc.connect(f).connect(engGain).connect(master); engOsc.start();
+}
+window.addEventListener("pointerdown", initAudio); window.addEventListener("keydown", initAudio);
+function engine(freq, vol) { if (!AC) return; const t = AC.currentTime; engOsc.frequency.setTargetAtTime(freq, t, 0.06); engGain.gain.setTargetAtTime(soundOn ? vol : 0, t, 0.08); }
+function tone(freq, dur, type = "sine", vol = 0.2, slide = 0, delay = 0) {
+  if (!AC || !soundOn) return; const t = AC.currentTime + delay;
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, vol = 0.3, from = 1800, to = 200, type = "lowpass", delay = 0) {
+  if (!AC || !soundOn) return; const t = AC.currentTime + delay;
+  const buf = AC.createBuffer(1, Math.floor(AC.sampleRate * dur), AC.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  src.buffer = buf; f.type = type; f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f).connect(g).connect(master); src.start(t);
+}
+const SFX = {
+  tick: () => tone(880, 0.06, "square", 0.05),
+  start: () => { tone(140, 0.45, "sawtooth", 0.12, 420); noise(0.4, 0.08, 600, 2000, "bandpass"); },
+  cash: () => { tone(988, 0.12, "triangle", 0.22); tone(1319, 0.22, "triangle", 0.2, 0, 0.09); },
+  fork: () => { tone(523, 0.18, "triangle", 0.18); tone(659, 0.18, "triangle", 0.18, 0, 0.14); tone(784, 0.35, "triangle", 0.2, 0, 0.28); },
+  split: () => noise(0.5, 0.15, 400, 3000, "bandpass"),
+  jump: () => { noise(0.6, 0.16, 500, 3500, "bandpass"); tone(300, 0.55, "sawtooth", 0.06, 760); },
+  land: () => { tone(90, 0.18, "sine", 0.35, 50); tone(1047, 0.15, "triangle", 0.16, 0, 0.05); tone(1568, 0.25, "triangle", 0.14, 0, 0.13); tone(2093, 0.3, "triangle", 0.12, 0, 0.22); },
+  crash: () => { noise(0.7, 0.4, 2500, 120); tone(160, 0.5, "sawtooth", 0.15, 45); },
+  cap: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.3, "triangle", 0.18, 0, i * 0.11))
+};
+
+// ---------- 7. Bots ----------
+function randomBet() { const z = Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random()); return Math.max(1, Math.min(1000, Math.round(Math.exp(2.9 + z)))); }
+function makeBots() {
+  const n = 30 + Math.floor(Math.random() * 25), out = [];
+  for (let i = 0; i < n; i++) {
+    const name = NAMES[Math.floor(Math.random() * NAMES.length)] + " " + INITIALS[Math.floor(Math.random() * INITIALS.length)] + ".";
+    const r = Math.random(), b = { name, bet: randomBet(), out: 0, road: null, you: false };
+    if (r < 0.4) b.early = r2(1.1 + Math.random() * 1.8);
+    else if (r < 0.5) b.atFork = true;
+    else if (r < 0.8) { b.plan = "smooth"; b.target = Math.min(150, r2(3.3 + -Math.log(1 - Math.random()) * 4)); }
+    else { b.plan = "wild"; b.jumps = Math.random() < 0.7 ? 1 : Math.random() < 0.8 ? 2 : 3; }
+    out.push(b);
+  }
+  return out.sort((a, b) => b.bet - a.bet);
+}
+
+// ---------- 8. Bet panels ----------
+const ICON_S = `<svg viewBox="0 0 30 30" aria-hidden="true"><path d="M5 25 C12 23, 18 15, 25 5" stroke="#2fd3c2" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M19 5 H25 V11" stroke="#2fd3c2" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_W = `<svg viewBox="0 0 30 30" aria-hidden="true"><path d="M15 3 L27 15 L15 27 L3 15 Z" stroke="#ff6a2b" stroke-width="2.6" fill="none" stroke-linejoin="round"/><path d="M8 19 L19 12 V19 Z" stroke="#ff6a2b" stroke-width="2.2" fill="none" stroke-linejoin="round"/></svg>`;
+const panelHTML = i => `
+  <div class="bp">
+    <div class="bp-head"><span class="tag">BET ${"AB"[i]}</span><span class="state" id="state${i}">No bet</span></div>
+    <div class="amt"><button class="sq" type="button" data-p="${i}" data-act="half" aria-label="Halve bet">½</button><input id="bet${i}" type="number" min="1" step="1" value="${i ? 5 : 10}" aria-label="Bet ${"AB"[i]} amount"><button class="sq" type="button" data-p="${i}" data-act="double" aria-label="Double bet">2×</button></div>
+    <div class="quick"><button type="button" data-p="${i}" data-set="10">10</button><button type="button" data-p="${i}" data-set="50">50</button><button type="button" data-p="${i}" data-set="100">100</button><button type="button" data-p="${i}" data-set="500">500</button></div>
+    <div class="road" id="road${i}" role="group" aria-label="Road at the split">
+      <button class="sign s" type="button" data-p="${i}" data-road="smooth" aria-pressed="${i ? "false" : "true"}">${ICON_S}<span><b>SMOOTH</b><small>keeps climbing</small></span></button>
+      <button class="sign w" type="button" data-p="${i}" data-road="wild" aria-pressed="${i ? "true" : "false"}">${ICON_W}<span><b>WILD</b><small>1 in 3 · triple</small></span></button>
+    </div>
+    <label class="auto" for="auto${i}"><input id="auto${i}" type="checkbox"> Auto cash out at <input id="at${i}" type="number" min="1.01" step="0.01" value="${i ? "9.00" : "1.80"}" aria-label="Auto cash out for bet ${"AB"[i]}"></label>
+    <button class="go" id="go${i}" type="button">Ride</button>
+    <div class="res" id="res${i}"></div>
+  </div>`;
+$("panels").innerHTML = panelHTML(0) + panelHTML(1);
+
+const panels = [0, 1].map(i => ({ i, stake: 0, out: 0, rider: null, road: i ? "wild" : "smooth",
+  el: { bet: $("bet" + i), auto: $("auto" + i), at: $("at" + i), go: $("go" + i), res: $("res" + i), state: $("state" + i), road: $("road" + i) } }));
+const betAmount = p => Math.max(1, Math.floor(Number(p.el.bet.value) || 0));
+const showRes = (p, t, k) => { p.el.res.textContent = t; p.el.res.className = "res " + (k || ""); };
+const riding = () => phase === "ride" || phase === "fork" || phase === "split";
+
+function currentValue(p) {
+  if (phase === "ride") return Math.floor(m * 100) / 100;
+  if (phase === "fork") return CFG.FORK;
+  if (phase === "split") {
+    if (p.road === "smooth") return smoothDown ? 0 : Math.floor(smoothVal * 100) / 100;
+    return wildDown || wildAir || wildDone ? 0 : wildVal;
+  }
+  return 0;
+}
+function cashOut(p, at) {
+  at = r2(at); p.out = at; p.rider.out = at;
+  const win = p.stake * at; balance += win; sessionNet += win; SFX.cash();
+  showRes(p, `Cashed out at ${xs(at)}${phase === "split" ? " on the " + p.road + " road" : ""} · +${fmt(win - p.stake)}`, "win");
+  listDirty = true; updatePanels();
+}
+panels.forEach(p => {
+  p.el.go.addEventListener("click", () => {
+    if (riding()) { if (p.stake && p.rider && !p.out) { const v = currentValue(p); if (v) cashOut(p, v); } return; }
+    if (!p.stake) {
+      const a = betAmount(p);
+      if (a > balance) { showRes(p, "Not enough credits for that bet.", "lose"); return; }
+      p.stake = a; balance -= a; sessionNet -= a; showRes(p, "", "");
+    } else { balance += p.stake; sessionNet += p.stake; p.stake = 0; }
+    listDirty = true; updatePanels();
+  });
+  p.el.road.querySelectorAll(".sign").forEach(b => b.addEventListener("click", () => {
+    if (phase === "split") return;
+    p.road = b.dataset.road; if (p.rider) p.rider.road = p.road;
+    p.el.road.querySelectorAll(".sign").forEach(x => x.setAttribute("aria-pressed", x === b));
+    tone(b.dataset.road === "wild" ? 660 : 440, 0.08, "triangle", 0.12); listDirty = true;
+  }));
+  p.el.bet.addEventListener("input", updatePanels);
+});
+document.querySelectorAll("[data-act],[data-set]").forEach(b => b.addEventListener("click", () => {
+  const p = panels[Number(b.dataset.p)];
+  if (b.dataset.set) p.el.bet.value = b.dataset.set;
+  if (b.dataset.act === "half") p.el.bet.value = Math.max(1, Math.floor(betAmount(p) / 2));
+  if (b.dataset.act === "double") p.el.bet.value = Math.min(1000, betAmount(p) * 2);
+  updatePanels();
+}));
+
+function updatePanels() {
+  $("balance").textContent = fmt(balance);
+  panels.forEach(p => {
+    const go = p.el.go, live = p.stake && p.rider && !p.out;
+    go.classList.remove("cashout", "cancel"); go.disabled = false;
+    p.el.road.classList.toggle("flash", phase === "fork" && !!live);
+    p.el.road.querySelectorAll(".sign").forEach(x => (x.disabled = phase === "split"));
+    if (riding() && live) {
+      const v = currentValue(p);
+      if (v) { go.classList.add("cashout"); go.innerHTML = `CASH OUT ${fmt(p.stake * v)}<small>at ${xs(v)}${phase === "fork" ? " · at the split" : ""}</small>`; }
+      else { go.disabled = true; go.innerHTML = wildAir && p.road === "wild" ? `IN THE AIR…<small>the landing decides it</small>` : `RIDING…<small>${p.road} road</small>`; }
+      p.el.state.textContent = phase === "split" ? (p.road === "wild" ? "Wild road" : "Smooth road") : phase === "fork" ? "At the split" : "Riding";
+    } else if (riding() && p.stake && p.out) {
+      go.disabled = true; go.innerHTML = `CASHED OUT<small>at ${xs(p.out)}</small>`; p.el.state.textContent = "Out";
+    } else if (riding()) {
+      go.disabled = true; go.innerHTML = `NEXT RIDE<small>bets open after this ride</small>`; p.el.state.textContent = "No bet";
+    } else if (p.stake) {
+      go.classList.add("cancel"); go.innerHTML = `CANCEL ${p.stake}<small>waiting for the start</small>`; p.el.state.textContent = "In next ride";
+    } else {
+      const a = betAmount(p); go.innerHTML = `RIDE ${a}<small>${phase === "waiting" ? "join this ride" : "join the next ride"}</small>`;
+      go.disabled = a > balance; p.el.state.textContent = "No bet";
+    }
+  });
+}
+
+// ---------- 9. The ride cycle ----------
+function enterWaiting(now) { phase = "waiting"; phaseStart = now; bots = makeBots(); riders = []; said.clear(); say("open", {}, true); listDirty = true; updatePanels(); }
+function startRide(now) {
+  phase = "ride"; phaseStart = now; rollRide(); m = 1;
+  smoothVal = CFG.FORK; smoothDown = false; wildVal = CFG.FORK; wildDown = false; wildDone = false; wildAir = false; wildJumpNo = 0; lastLanded = 0; lastJumpSound = 0;
+  riders = bots.map(b => ({ ...b }));
+  panels.forEach(p => { p.out = 0; p.rider = null;
+    if (p.stake) { p.rider = { name: "You · " + "AB"[p.i], bet: p.stake, out: 0, road: null, you: true, panel: p.i }; riders.unshift(p.rider); } });
+  say("go", {}, true); SFX.start(); listDirty = true; updatePanels();
+}
+function startFork(now) {
+  phase = "fork"; phaseStart = now; m = CFG.FORK;
+  for (const r of riders) if (!r.you && !r.out && r.atFork) r.out = CFG.FORK;
+  panels.forEach(p => { if (p.stake && p.rider && !p.out && p.el.auto.checked && r2(Number(p.el.at.value)) <= CFG.FORK) cashOut(p, CFG.FORK); });
+  say("fork", {}, true); SFX.fork(); listDirty = true; updatePanels();
+}
+function startSplit(now) {
+  phase = "split"; phaseStart = now;
+  for (const r of riders) if (!r.out) r.road = r.you ? panels[r.panel].road : r.plan;
+  say("split", {}, true); SFX.split(); listDirty = true; updatePanels();
+}
+function endRide(now) {
+  phase = "result"; phaseStart = now; rides++;
+  const reached = C1 >= CFG.FORK;
+  history.unshift(reached ? { s: S, j: J } : { e: C1 }); history = history.slice(0, 24);
+  panels.forEach(p => {
+    if (p.stake && p.rider) {
+      if (!p.out) showRes(p, reached ? `Lost ${fmt(p.stake)} on the ${p.road} road` : `Lost ${fmt(p.stake)} · down at ${xs(C1)} before the split`, "lose");
+      p.stake = 0; p.out = 0; p.rider = null;
+    }
+  });
+  renderHistory(); listDirty = true; updatePanels();
+}
+
+function tick(now) {
+  const t = (now - phaseStart) / 1000;
+
+  if (phase === "waiting") {
+    const left = Math.max(0, CFG.WAIT - t);
+    setCenter("1.00x", "mid", `Starts in ${Math.ceil(left)}`); $("bar").hidden = false; $("forkCall").hidden = true;
+    $("barFill").style.transform = `scaleX(${left / CFG.WAIT})`;
+    engine(46, 0.015);
+    if (left <= 3 && left > 0 && Math.ceil(left) !== lastTick) { lastTick = Math.ceil(left); SFX.tick(); }
+    if (left <= 0) { lastTick = 0; startRide(now); } else if (Math.floor(t * 6) !== Math.floor((t - 0.02) * 6)) listDirty = true;
+  }
+
+  else if (phase === "ride") {
+    m = Math.min(Math.exp(CFG.GROWTH * t), C1, CFG.FORK);
+    setCenter(xs(Math.floor(m * 100) / 100), colourOf(m), m > 2.3 ? "Split ahead at 3.00x" : "Riding"); $("bar").hidden = true;
+    engine(70 + 90 * Math.log(m + 1), 0.04);
+    if (m > 2.3 && !said.has("soon")) { said.add("soon"); say("soon", {}, true); }
+    for (const r of riders) if (!r.you && !r.out && r.early && r.early <= m && r.early <= C1) { r.out = r.early; listDirty = true; }
+    panels.forEach(p => { if (p.stake && p.rider && !p.out && p.el.auto.checked) { const a = r2(Number(p.el.at.value)); if (a >= 1.01 && a < CFG.FORK && a <= m && a <= C1) cashOut(p, a); } });
+    if (C1 < CFG.FORK && m >= C1) { say("early", { x: xs(C1) }, true); SFX.crash(); flipAt = now; endRide(now); }
+    else if (m >= CFG.FORK) startFork(now);
+    else updatePanels();
+  }
+
+  else if (phase === "fork") {
+    const left = Math.max(0, CFG.FORK_PAUSE - t);
+    setCenter("3.00x", "mid", `Choose your road · ${Math.ceil(left)}`); $("forkCall").hidden = false;
+    engine(55 + Math.sin(now / 120) * 6, 0.025);
+    if (Math.ceil(left) !== lastTick && left > 0) { lastTick = Math.ceil(left); SFX.tick(); }
+    if (left <= 0) { $("forkCall").hidden = true; startSplit(now); } else updatePanels();
+  }
+
+  else if (phase === "split") {
+    $("forkCall").hidden = true; lastTick = 0;
+    engine(smoothDown ? (wildDown || wildDone ? 40 : 160) : Math.min(420, 90 + 70 * Math.log(smoothVal + 1)), smoothDown && (wildDown || wildDone) ? 0 : 0.04);
+    if (lowGfx) setCenter(`${smoothDown ? "DOWN" : xs(smoothVal)} | ${wildDown ? "MISSED" : wildAir ? "JUMP…" : xs(wildVal)}`, "mid", "Smooth road | Wild road");
+    else setCenter("", "mid", "");
+    if (!smoothDown) {
+      smoothVal = Math.min(CFG.FORK * Math.exp(CFG.GROWTH * t), S);
+      for (const r of riders) if (!r.you && !r.out && r.road === "smooth" && r.target <= smoothVal && r.target <= S) { r.out = r.target; listDirty = true;
+        if (r.bet * r.target >= 400 || r.target >= 10) say("big", { name: r.name, x: xs(r.target) }); }
+      if (smoothVal >= S) { smoothDown = true; smoothDownAt = now; say("sdown", { x: xs(S) }, true); SFX.crash(); burst(1, now); listDirty = true; }
+    }
+    if (!wildDown && !wildDone) {
+      const i = Math.floor(t / CFG.JUMP_EVERY), inCycle = t - i * CFG.JUMP_EVERY;
+      wildJumpNo = i; wildAir = i >= 1 && inCycle < CFG.AIR;
+      if (wildAir && lastJumpSound < i) { lastJumpSound = i; SFX.jump(); }
+      if (i >= 1 && !wildAir && lastLanded < i) {
+        lastLanded = i;
+        if (i <= J) {
+          wildVal = wildAt(i); say("land", { n: i, x: xs(wildVal) }, true); SFX.land(); burst(2, now, true);
+          for (const r of riders) if (!r.you && !r.out && r.road === "wild" && i >= r.jumps) { r.out = wildVal; listDirty = true; }
+          if (i >= CFG.MAX_JUMPS) {
+            wildDone = true; say("cap", {}, true); SFX.cap();
+            for (const r of riders) if (!r.you && !r.out && r.road === "wild") r.out = wildVal;
+            panels.forEach(p => { if (p.stake && p.rider && !p.out && p.road === "wild") cashOut(p, wildVal); });
+          }
+        } else { wildDown = true; wildDownAt = now; say("fail", { n: i }, true); SFX.crash(); burst(2, now); listDirty = true; }
+      }
+    }
+    panels.forEach(p => {
+      if (!(p.stake && p.rider && !p.out && p.el.auto.checked)) return;
+      const a = r2(Number(p.el.at.value));
+      if (p.road === "smooth" && !smoothDown && a >= CFG.FORK && a <= smoothVal && a <= S) cashOut(p, a);
+      if (p.road === "wild" && !wildDown && !wildAir && wildVal >= a) cashOut(p, wildVal);
+    });
+    if (smoothDown && (wildDown || wildDone)) { say("both", {}, true); endRide(now); } else updatePanels();
+  }
+
+  else if (phase === "result") {
+    engine(40, 0);
+    const reached = C1 >= CFG.FORK;
+    setCenter(reached ? "" : xs(C1), "down", reached ? "" : "Down before the split");
+    if (t >= CFG.RESULT) enterWaiting(now);
+  }
+
+  if (listDirty && now - lastList > 150) { renderList(); lastList = now; listDirty = false; }
+  if (Math.floor(now / 1000) !== Math.floor((now - 17) / 1000)) renderSession(now);
+  if (now - lastReality > CFG.REALITY_MIN * 60000 && $("reality").hidden) showReality(now);
+  draw(now, t);
+  requestAnimationFrame(tick);
+}
+function setCenter(big, cls, sub) { const el = $("mult"); el.textContent = big; el.className = "mult " + cls; el.hidden = !big; $("sub").textContent = sub; }
+
+// ---------- 10. Lists ----------
+function visibleRiders() {
+  const t = (performance.now() - phaseStart) / 1000;
+  const shown = bots.slice(0, Math.ceil(bots.length * Math.min(1, t / (CFG.WAIT * 0.8))));
+  return [...panels.filter(p => p.stake).map(p => ({ name: "You · " + "AB"[p.i], bet: p.stake, out: 0, road: null, you: true })), ...shown];
+}
+function renderList() {
+  const rows = phase === "waiting" ? visibleRiders() : riders;
+  $("riderCount").textContent = rows.length;
+  $("totalBets").textContent = rows.reduce((s, r) => s + r.bet, 0).toLocaleString("en-US");
+  $("cntS").textContent = rows.filter(r => r.road === "smooth").length;
+  $("cntW").textContent = rows.filter(r => r.road === "wild").length;
+  $("list").innerHTML = rows.map(r => {
+    const out = r.out > 0, rd = r.road === "smooth" ? `<span class="rd s">S</span>` : r.road === "wild" ? `<span class="rd w">W</span>` : `<span>–</span>`;
+    return `<div class="row${r.you ? " you" : ""}${out ? " out" : ""}"><span class="name">${r.name}</span><span>${r.bet.toLocaleString("en-US")}</span>${rd}` +
+      `<span class="x">${out ? xs(r.out) : "–"}</span><span class="win">${out ? fmt(r.bet * r.out) : ""}</span></div>`;
+  }).join("");
+}
+// history: how far each road went. A Wild road that missed its first jump shows ✕
+function renderHistory() {
+  $("history").innerHTML = history.map(h => h.e !== undefined
+    ? `<span class="pill"><span class="${colourOf(h.e)}">${xs(h.e)}</span></span>`
+    : `<span class="pill"><span class="ts">S</span> <span class="${colourOf(h.s)}">${xs(h.s)}</span> · <span class="tw">W</span> ${h.j ? `<span class="high">${xs(wildAt(h.j))}</span>` : `<span class="x">✕</span>`}</span>`).join("");
+}
+function renderSession(now) {
+  const s = Math.floor((now - sessionStart) / 1000);
+  const net = r2(sessionNet + panels.reduce((a, p) => a + (!riding() || !p.rider ? p.stake : 0), 0));
+  $("session").innerHTML = `Session ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} · Rides ${rides} · Your result <span class="net ${net > 0 ? "up" : net < 0 ? "down" : ""}">${net > 0 ? "+" : ""}${fmt(net)}</span> credits`;
+}
+function showReality(now) {
+  const mins = Math.round((now - sessionStart) / 60000), net = r2(sessionNet);
+  $("realityText").textContent = `You've been playing for ${mins} minutes and ${rides} rides. Your result so far: ${net > 0 ? "+" : ""}${fmt(net)} credits. On average the game keeps 3 of every 100 credits bet, whichever road you take.`;
+  $("reality").hidden = false;
+}
+$("realityOk").addEventListener("click", () => { $("reality").hidden = true; lastReality = performance.now(); });
+$("lang").addEventListener("change", e => { lang = e.target.value; });
+$("lowBtn").addEventListener("click", e => { lowGfx = !lowGfx; e.currentTarget.setAttribute("aria-pressed", lowGfx); e.currentTarget.textContent = "Low graphics: " + (lowGfx ? "on" : "off"); $("scene").classList.toggle("lowgfx", lowGfx); });
+$("soundBtn").addEventListener("click", e => { soundOn = !soundOn; e.currentTarget.setAttribute("aria-pressed", soundOn); e.currentTarget.textContent = "Sound: " + (soundOn ? "on" : "off"); initAudio(); if (!soundOn) engine(40, 0); });
+$("reset").addEventListener("click", () => { balance = 1000; sessionNet = 0; sessionStart = performance.now(); updatePanels(); });
+
+// ---------- 11. Drawing ----------
+const cv = $("cv"), ctx = cv.getContext("2d");
+let W = 0, H = 0, dist = 0, distS = 0, distW = 0, spin = 0, lastNow = performance.now(), flipAt = 0, smoothDownAt = 0, wildDownAt = 0;
+let smoke = [], sparks = [];
+function resize() { const r = window.devicePixelRatio || 1, b = cv.getBoundingClientRect(); W = b.width; H = b.height; cv.width = Math.round(W * r); cv.height = Math.round(H * r); ctx.setTransform(r, 0, 0, r, 0, 0); }
+new ResizeObserver(resize).observe(cv);
+const city = (() => { const b = []; let x = 0; while (x < 1800) { const w = 30 + Math.random() * 60; b.push({ x, w, h: 30 + Math.random() * 80, ant: Math.random() < 0.2, lit: Array.from({ length: 6 }, () => Math.random() < 0.3) }); x += w + 4; } return { b, len: x }; })();
+const angleOf = x => 8 + 60 * (1 - 1 / Math.sqrt(x));
+const ease = k => k * k * (3 - 2 * k);
+const LIV = {
+  main:   { body: "#ffc93c", dark: "#b8860b", jacket: "#7b4dff", helmet: "#f6f0e9", plate: "1" },
+  smooth: { body: "#2fd3c2", dark: "#12786d", jacket: "#1a2b4a", helmet: "#2fd3c2", plate: "S" },
+  wild:   { body: "#ff6a2b", dark: "#9c3510", jacket: "#2b1a12", helmet: "#ffc93c", plate: "W" }
+};
+function burst(lane, now, good) {          // sparks/dust on a landing or crash
+  if (reduceMotion) return;
+  for (let k = 0; k < 18; k++) sparks.push({ lane, x: 0, y: 0, vx: (Math.random() - 0.3) * 4, vy: -Math.random() * 3.2, life: 1, good: !!good });
+}
+
+function draw(now, t) {
+  const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
+  ctx.clearRect(0, 0, W, H);
+  if (lowGfx || !W) return;
+  const s = Math.min(H / 300, W / 420), bx = W * 0.25;
+  const sp = phase === "split" ? Math.min(1, t / 0.7) : (phase === "result" && C1 >= CFG.FORK ? 1 : 0);
+  const yMid = H * 0.64, yTop = H * 0.43, yBot = H * 0.77;
+  const ySmooth = yMid + (yTop - yMid) * ease(sp), yWild = yMid + (yBot - yMid) * ease(sp);
+  const v1 = phase === "ride" ? 3 + 2 * Math.log(m) : phase === "waiting" ? 0.4 : phase === "fork" ? 0.6 : 0;
+  const vS = phase === "split" && !smoothDown ? 3 + 2.2 * Math.log(smoothVal) : 0;
+  const vW = phase === "split" && !wildDown && !wildDone ? 4.4 : 0;
+  if (!reduceMotion) { dist += (v1 + Math.max(vS, vW) * 0.4) * dt * 60 * s; distS += (v1 + vS) * dt * 60 * s; distW += (v1 + vW) * dt * 60 * s; }
+  spin += (v1 + vS + vW) * dt * 3;
+
+  // moon + skyline
+  ctx.fillStyle = "rgba(255, 214, 150, 0.28)"; ctx.beginPath(); ctx.arc(W * 0.8, H * 0.24, H * 0.11, 0, Math.PI * 2); ctx.fill();
+  const len = city.len * s * 0.9, o = (dist * 0.25) % len;
+  for (let rep = -1; rep < Math.ceil(W / len) + 1; rep++) for (const b of city.b) {
+    const x = rep * len + b.x * s * 0.9 - o; if (x > W || x + b.w * s < 0) continue;
+    const top = H * 0.36 - b.h * s * 0.8;
+    ctx.fillStyle = "rgba(34, 20, 48, 0.95)"; ctx.fillRect(x, top, b.w * s * 0.9, b.h * s * 0.8);
+    if (b.ant) { ctx.fillRect(x + b.w * s * 0.4, top - 12 * s, 2 * s, 12 * s); ctx.fillStyle = "#ff5a5f"; ctx.fillRect(x + b.w * s * 0.4 - 1 * s, top - 14 * s, 4 * s, 3 * s); }
+    ctx.fillStyle = "rgba(255, 201, 60, 0.5)"; b.lit.forEach((on, k) => { if (on) ctx.fillRect(x + (5 + (k % 3) * 8) * s, top + (7 + Math.floor(k / 3) * 11) * s, 3.5 * s, 4.5 * s); });
+  }
+  ctx.fillStyle = "#1a1424"; ctx.fillRect(0, H * 0.36, W, H * 0.64);
+
+  if (sp < 1) {
+    road(yMid, dist, "#2a2135", "rgba(243, 217, 164, 0.55)", s);
+    if (phase === "ride" || phase === "fork" || phase === "waiting") {
+      const toFork = phase === "fork" ? 0 : Math.max(0, (Math.log(CFG.FORK) - Math.log(Math.max(1, m))) / CFG.GROWTH);
+      const fx = bx + 175 * s + toFork * 60 * s * 2.6;
+      if (fx < W + 220) forkAhead(fx, yMid, s);
+    }
+  }
+  if (sp > 0) {
+    road(ySmooth, distS, "rgba(47, 211, 194, 0.15)", "rgba(47, 211, 194, 0.7)", s);
+    road(yWild, distW, "rgba(255, 106, 43, 0.15)", "rgba(255, 106, 43, 0.7)", s);
+    if (sp >= 1) {
+      ramps(yWild, s, t);
+      laneLabel("smooth", smoothDown ? "DOWN " + xs(S) : xs(smoothVal), ySmooth, "#2fd3c2", smoothDown, s, "keeps climbing");
+      laneLabel("wild", wildDown ? "MISSED JUMP " + wildJumpNo : wildDone ? "MAX " + xs(wildVal) : wildAir ? "JUMP " + wildJumpNo + "…" : xs(wildVal), yWild, "#ff6a2b", wildDown, s, wildDown || wildDone ? "" : "next jump: 1 in 3 → " + xs(wildVal * CFG.JUMP_MULT));
+    }
+  }
+
+  // bikes
+  if (sp === 0) {
+    let a = phase === "waiting" ? Math.sin(now / 160) * 0.8 : angleOf(m), alpha = 1, dx = 0;
+    if (phase === "result" && C1 < CFG.FORK) { const k = Math.min(1, (now - flipAt) / 700); a = reduceMotion ? a : angleOf(C1) + (172 - angleOf(C1)) * k * k; dx = -30 * s * k; alpha = k < 1 ? 1 : Math.max(0, 1 - ((now - flipAt) / 700 - 1)); }
+    exhaust(bx + dx, yMid, s, v1, dt);
+    bike(bx + dx, yMid - 15 * s, a, s, alpha, LIV.main);
+  } else {
+    let a = angleOf(smoothVal), al = 1, dx = 0;
+    if (smoothDown) { const k = Math.min(1, (now - smoothDownAt) / 700); a = reduceMotion ? a : angleOf(S) + (172 - angleOf(S)) * k * k; dx = -30 * s * k; al = Math.max(0.25, 1 - k * 0.75); }
+    exhaust(bx + dx, ySmooth, s, vS, dt);
+    bike(bx + dx, ySmooth - 15 * s, a, s, al, LIV.smooth);
+    let h = 0, wa = 6, wal = 1;
+    const i = Math.floor(t / CFG.JUMP_EVERY), inCycle = t - i * CFG.JUMP_EVERY;
+    if (phase === "split" && !wildDown && !wildDone && i >= 1 && inCycle < CFG.AIR) { const k = inCycle / CFG.AIR; h = Math.sin(Math.PI * k) * 58 * s; wa = 22 - 36 * k; }
+    if (wildDown) { const k = Math.min(1, (now - wildDownAt) / 700); wa = reduceMotion ? 6 : -10 - 150 * k * k; wal = Math.max(0.25, 1 - k * 0.75); }
+    if (h > 0) { ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.beginPath(); ctx.ellipse(bx + 32 * s, yWild + 2 * s, 40 * s * (1 - h / (80 * s)), 4 * s, 0, 0, Math.PI * 2); ctx.fill(); }
+    exhaust(bx, yWild - h, s, vW, dt);
+    bike(bx, yWild - 15 * s - h, wa, s, wal, LIV.wild);
+  }
+  // particles
+  for (const p of smoke) { p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.r += 0.25; p.life -= dt * 1.4; }
+  smoke = smoke.filter(p => p.life > 0);
+  for (const p of smoke) { ctx.fillStyle = `rgba(210, 200, 220, ${p.life * 0.25})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * s, 0, Math.PI * 2); ctx.fill(); }
+  for (const p of sparks) {
+    p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.vy += 0.12; p.life -= dt * 1.1;
+    const y0 = p.lane === 1 ? ySmooth : yWild;
+    ctx.fillStyle = p.good ? `rgba(255, 201, 60, ${Math.max(0, p.life)})` : `rgba(230, 200, 170, ${Math.max(0, p.life) * 0.6})`;
+    ctx.beginPath(); ctx.arc(bx + 20 * s + p.x * s, y0 + p.y * s, (p.good ? 2.2 : 4) * s, 0, Math.PI * 2); ctx.fill();
+  }
+  sparks = sparks.filter(p => p.life > 0);
+}
+function exhaust(x, y, s, speed, dt) {
+  if (reduceMotion || speed <= 0.5 || Math.random() > 0.35) return;
+  smoke.push({ x: x - 16 * s, y: y - 18 * s, vx: -1.2 - speed * 0.25, vy: -0.3, r: 2, life: 1 });
+}
+function road(y, d, fill, dash, s) {
+  ctx.fillStyle = fill; ctx.fillRect(0, y - 4 * s, W, 32 * s);
+  ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0, y - 4 * s, W, 2 * s);
+  ctx.fillStyle = dash; const dw = 26 * s, gap = 22 * s, off = d % (dw + gap);
+  for (let x = -off; x < W; x += dw + gap) ctx.fillRect(x, y + 15 * s, dw, 2.5 * s);
+}
+function forkAhead(x, y, s) {
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(47, 211, 194, 0.85)"; ctx.lineWidth = 7 * s;
+  ctx.beginPath(); ctx.moveTo(x, y + 10 * s); ctx.quadraticCurveTo(x + 80 * s, y + 8 * s, x + 170 * s, y - 70 * s); ctx.stroke();
+  ctx.strokeStyle = "rgba(255, 106, 43, 0.85)";
+  ctx.beginPath(); ctx.moveTo(x, y + 12 * s); ctx.quadraticCurveTo(x + 80 * s, y + 16 * s, x + 170 * s, y + 70 * s); ctx.stroke();
+  ctx.fillStyle = "#3a2d47"; ctx.fillRect(x - 3 * s, y - 56 * s, 5 * s, 56 * s);
+  ctx.fillStyle = "#ffc93c"; roundRect(x - 40 * s, y - 80 * s, 80 * s, 24 * s, 5 * s); ctx.fill();
+  ctx.fillStyle = "#261800"; ctx.font = `${11 * s}px "Russo One", Impact, sans-serif`; ctx.textAlign = "center"; ctx.fillText("SPLIT 3.00x", x, y - 63 * s); ctx.textAlign = "left";
+}
+function ramps(y, s, t) {
+  if (wildDown || wildDone || phase !== "split") return;
+  const i = Math.floor(t / CFG.JUMP_EVERY), next = (i + 1) * CFG.JUMP_EVERY - t;
+  const rx = W * 0.25 + 18 * s + next * 4.4 * 60 * s * 0.55;
+  ctx.fillStyle = "#ffc93c"; ctx.beginPath(); ctx.moveTo(rx - 40 * s, y + 11 * s); ctx.lineTo(rx, y - 12 * s); ctx.lineTo(rx, y + 11 * s); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#261800"; ctx.lineWidth = 1.5 * s; for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(rx - 40 * s + k * 10 * s, y + 11 * s); ctx.lineTo(rx - 40 * s + k * 10 * s, y + 11 * s - k * 5.7 * s); ctx.stroke(); }
+  ctx.fillStyle = "#ffc93c"; ctx.font = `${10 * s}px "Russo One", Impact, sans-serif`; ctx.fillText("1 IN 3", rx - 38 * s, y - 16 * s);
+}
+function laneLabel(road, value, y, color, down, s, hint) {
+  const x = W - 16 * s; ctx.textAlign = "right";
+  ctx.fillStyle = color; ctx.font = `${12 * s}px "Russo One", Impact, sans-serif`; ctx.fillText(road.toUpperCase() + " ROAD", x, y - 48 * s);
+  ctx.fillStyle = down ? "#ff5a5f" : "#f6f0e9"; ctx.font = `${30 * s}px "Russo One", Impact, sans-serif`; ctx.fillText(value, x, y - 14 * s);
+  if (hint) { ctx.fillStyle = "rgba(246,240,233,0.75)"; ctx.font = `600 ${10.5 * s}px Rubik, system-ui, sans-serif`; ctx.fillText(hint, x, y + 4 * s); }
+  const you = panels.filter(p => p.rider && p.road === road);
+  if (you.length) { ctx.fillStyle = "#ffc93c"; ctx.font = `700 ${11 * s}px Rubik, system-ui, sans-serif`; ctx.fillText("YOU: " + you.map(p => "AB"[p.i] + (p.out ? " out " + xs(p.out) : " riding")).join(", "), x, y - 66 * s); }
+  ctx.textAlign = "left";
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+// the bike: an original dirt/street bike + rider, drawn from shapes, rotating around the rear wheel
+function bike(x, y, angDeg, s, alpha, L) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.rotate(-angDeg * Math.PI / 180); ctx.scale(s, s);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  // shadow under bike when level
+  // exhaust pipe + silencer
+  ctx.strokeStyle = "#9a90a3"; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(34, -8); ctx.quadraticCurveTo(14, -6, -2, -15); ctx.stroke();
+  ctx.fillStyle = "#c9c1d0"; roundRect(-16, -21, 16, 7, 3); ctx.fill(); ctx.fillStyle = "#3b3342"; ctx.fillRect(-17, -19.5, 2, 4);
+  // swingarm + chain
+  ctx.strokeStyle = "#20182a"; ctx.lineWidth = 5; line(0, 0, 26, -10);
+  ctx.strokeStyle = "#5c5266"; ctx.lineWidth = 1.2; line(0, -3, 25, -13);
+  // rear fender
+  ctx.fillStyle = L.body; ctx.beginPath(); ctx.moveTo(-18, -14); ctx.quadraticCurveTo(-8, -26, 10, -24); ctx.lineTo(8, -20); ctx.quadraticCurveTo(-6, -21, -14, -11); ctx.closePath(); ctx.fill();
+  // engine block with fins
+  ctx.fillStyle = "#4a4155"; roundRect(18, -21, 20, 15, 3); ctx.fill();
+  ctx.strokeStyle = "#6d6278"; ctx.lineWidth = 1; for (let k = 0; k < 4; k++) line(20, -18 + k * 3.2, 36, -18 + k * 3.2);
+  // tank + side panel
+  ctx.fillStyle = L.body; poly([[10, -23], [28, -27], [46, -33], [54, -27], [47, -19], [24, -17]]);
+  ctx.fillStyle = L.dark; poly([[26, -19], [46, -21], [47, -19], [24, -17]]);
+  ctx.fillStyle = "rgba(255,255,255,0.55)"; poly([[30, -28], [44, -32.5], [46, -31], [31, -26.5]]);
+  // seat
+  ctx.fillStyle = "#16111d"; poly([[1, -25], [27, -29], [28, -24.5], [5, -22]]);
+  // front fork (twin tubes), fender, number plate, bars, light
+  ctx.strokeStyle = "#d9d2e0"; ctx.lineWidth = 2.6; line(65, 0, 52, -33); line(62, 1, 49, -32);
+  ctx.fillStyle = L.body; ctx.beginPath(); ctx.moveTo(56, -17); ctx.quadraticCurveTo(66, -20, 76, -14); ctx.lineTo(74, -12); ctx.quadraticCurveTo(66, -16, 57, -14); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#f6f0e9"; roundRect(50, -45, 13, 11, 2.5); ctx.fill();
+  ctx.fillStyle = "#16111d"; ctx.font = "9px 'Russo One', Impact, sans-serif"; ctx.textAlign = "center"; ctx.fillText(L.plate, 56.5, -36.5); ctx.textAlign = "left";
+  ctx.strokeStyle = "#16111d"; ctx.lineWidth = 3; line(51, -34, 42, -38);
+  ctx.fillStyle = "rgba(255, 230, 160, 0.9)"; ctx.beginPath(); ctx.arc(62, -27, 3.4, 0, Math.PI * 2); ctx.fill();
+  // wheels
+  wheel(0, 0, L); wheel(64, 0, L);
+  // rider: boots, legs, jacket, arm, gloves, helmet
+  ctx.strokeStyle = "#263552"; ctx.lineWidth = 6.5; ctx.beginPath(); ctx.moveTo(18, -29); ctx.lineTo(33, -21); ctx.lineTo(29, -9); ctx.stroke();
+  ctx.fillStyle = "#16111d"; roundRect(25, -11, 11, 6, 2); ctx.fill();
+  ctx.strokeStyle = L.jacket; ctx.lineWidth = 11; line(18, -30, 27, -53);
+  ctx.strokeStyle = L.body; ctx.lineWidth = 2.2; line(20, -32, 27.5, -50);
+  ctx.strokeStyle = L.jacket; ctx.lineWidth = 5.5; ctx.beginPath(); ctx.moveTo(28, -50); ctx.lineTo(37, -43); ctx.lineTo(43, -37); ctx.stroke();
+  ctx.fillStyle = "#16111d"; ctx.beginPath(); ctx.arc(43.5, -37, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = L.helmet; ctx.beginPath(); ctx.arc(30, -64, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = L.body; ctx.fillRect(21, -66, 18, 3);
+  ctx.fillStyle = "#16111d"; roundRect(31, -67, 11, 7, 3); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.beginPath(); ctx.arc(26, -69, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function line(a, b, c, d) { ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); }
+function poly(p) { ctx.beginPath(); p.forEach(([a, b], i) => (i ? ctx.lineTo(a, b) : ctx.moveTo(a, b))); ctx.closePath(); ctx.fill(); }
+function wheel(cx, cy, L) {
+  ctx.strokeStyle = "#0d0a12"; ctx.lineWidth = 6.5; ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = "#2a2232"; ctx.lineWidth = 1.5; ctx.setLineDash([2.5, 2.5]); ctx.lineDashOffset = -spin * 6; ctx.beginPath(); ctx.arc(cx, cy, 16.6, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = L.body; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = "#a79db1"; ctx.lineWidth = 1;
+  for (let k = 0; k < 6; k++) { const a = spin + k * Math.PI / 3; line(cx, cy, cx + Math.cos(a) * 10, cy + Math.sin(a) * 10); }
+  ctx.fillStyle = "#d9d2e0"; ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+}
+
+// ---------- 12. Start ----------
+function start(saved) {
+  if (saved && typeof saved.balance === "number") { balance = saved.balance; rides = saved.rides || 0; history = saved.history || []; }
+  else for (let i = 0; i < 12; i++) { rollRide(); history.push(C1 >= CFG.FORK ? { s: S, j: J } : { e: C1 }); }
+  resize(); renderHistory(); enterWaiting(performance.now());
+  requestAnimationFrame(tick);
+}
+window.claude?.hot?.snapshot?.(() => ({ balance: balance + panels.reduce((a, p) => a + (!riding() || !p.rider ? p.stake : 0), 0), rides, history }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+
+</body></html>
